@@ -5,4 +5,16 @@ package com.example.android.todolist;
  */
 
 public class Task {
+    public boolean STATUS_COMPLETE;
+    public String task;
+
+    public Task() {
+        STATUS_COMPLETE = false;
+    }
+
+    public Task(boolean STATUS_COMPLETE, String task) {
+        super();
+        this.STATUS_COMPLETE = STATUS_COMPLETE;
+        this.task = task;
+    }
 }

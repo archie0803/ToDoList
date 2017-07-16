@@ -4,9 +4,15 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.DividerItemDecoration;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -19,6 +25,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static android.R.attr.category;
@@ -31,11 +38,15 @@ import static com.example.android.todolist.ToDoOpenHelper.todoOpenHelper;
 public class MainActivity extends AppCompatActivity {
 
     private static final int NEW_TODO = 1;
-    ListView listView;
+    //ListView listView;
     ArrayList<ToDo> toDoList;
-    ToDoListAdapter toDoListAdapter;
+    ToDoRecyclerAdapter toDoRecyclerAdapter;
     SQLiteDatabase database;
     public static int pos;
+    FloatingActionButton fab;
+
+    RecyclerView mRecyclerView;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,38 +55,70 @@ public class MainActivity extends AppCompatActivity {
 
         todoOpenHelper = ToDoOpenHelper.getOpenHelperInstance(this);
 
-        listView = (ListView) findViewById(R.id.toDoListView);
+        mRecyclerView = (RecyclerView)findViewById(R.id.recycler_view);
+
         toDoList = new ArrayList<>();
-        toDoListAdapter = new ToDoListAdapter(this, toDoList);
-        listView.setAdapter(toDoListAdapter);
 
-
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
+        fab = (FloatingActionButton) findViewById(R.id.addFab);
+        fab.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            public void onClick(View view) {
+                Intent i = new Intent(MainActivity.this, ToDoDetailActivity.class);
+                i.putExtra(IntentConstants.TODO_ID, -1);
+                startActivityForResult(i, NEW_TODO);
+            }
+        });
+
+        toDoRecyclerAdapter = new ToDoRecyclerAdapter(this, toDoList, new ToDoRecyclerAdapter.ToDoClickListener() {
+            @Override
+            public void onItemClick(View view, int position) {
                 pos = position;
                 Intent i = new Intent(MainActivity.this, ToDoDetailActivity.class);
                 i.putExtra(IntentConstants.TODO_ID, toDoList.get(position).id);
-                i.putExtra(IntentConstants.TODO_TITLE, toDoList.get(position).title);
+                Log.d("ID: ", toDoList.get(position).id + " MA");
+                i.putExtra(IntentConstants.TODO_TITLE, toDoList.get(position).getTitle());
+                if(toDoList.get(position).getAlarmTime() != 0){
+                    Log.d("ID: ", toDoList.get(position).getAlarmTime() + " AT");
+                    i.putExtra(IntentConstants.TODO_ALARM_TIME, toDoList.get(position).getAlarmTime());
+                }
                 startActivityForResult(i, 1);
+                toDoRecyclerAdapter.notifyDataSetChanged();
+            }
 
+            @Override
+            public void onItemLongClick(View view, int position) {
+                int i_d = toDoList.get(position).id;
+                remove(position, i_d);
             }
         });
-        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+        mRecyclerView.setAdapter(toDoRecyclerAdapter);
+
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        mRecyclerView.setItemAnimator(new DefaultItemAnimator());
+
+        /*
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP|ItemTouchHelper.DOWN,ItemTouchHelper.RIGHT) {
+
             @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                database = todoOpenHelper.getWritableDatabase();
-                id = toDoList.get(position).id;
-                remove(position);
-                database.delete(TODO_TABLE_NAME, ToDoOpenHelper.TODO_ID + " = " + id, null);
+            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+                int from = viewHolder.getAdapterPosition();
+                int to = target.getAdapterPosition();
+                Collections.swap(toDoList,from,to);
+                toDoRecyclerAdapter.notifyItemMoved(from,to);
                 return true;
             }
+
+            @Override
+            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+                //int position = viewHolder.getAdapterPosition();
+                //toDoList.remove(position);
+                //mAdapter.notifyItemRemoved(position);
+            }
         });
+        itemTouchHelper.attachToRecyclerView(mRecyclerView);
+        */
 
         updateTasks();
-
-
     }
 
     @Override
@@ -83,61 +126,21 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == 1) {
             if (resultCode == RESULT_OK) {
                 updateTasks();
-            } else if (requestCode == RESULT_CANCELED) {
+            }
+
+            else if (requestCode == RESULT_CANCELED) {
                 //
             }
         }
 
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main_menu, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if (R.id.add == id) {
-            Intent i = new Intent(this, ToDoDetailActivity.class);
-            startActivityForResult(i, NEW_TODO);
-
-        } else if (R.id.remove == id) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("Delete?");
-            builder.setCancelable(false);
-
-            //builder.setMessage("Are you sure you wanna delete?");
-            View v = getLayoutInflater().inflate(R.layout.dialog_view, null);
-            final TextView tv = (TextView) v.findViewById(R.id.conText);
-            tv.setText("Are you sure you want to delete?");
-            builder.setView(v);
-            builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    toDoList.remove(toDoList.size() - 1);
-                    toDoListAdapter.notifyDataSetChanged();
-                }
-            });
-            builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.dismiss();
-                }
-            });
-            AlertDialog dialog = builder.create();
-            dialog.show();
-
-        }
-        return true;
-    }
-
-    public void remove(int pos) {
+    public void remove(int pos, int i_d) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Delete?");
         builder.setCancelable(true);
         final int position = pos;
+        final int id = i_d;
         //builder.setMessage("Are you sure you wanna delete?");
         View v = getLayoutInflater().inflate(R.layout.dialog_view, null);
         final TextView tv = (TextView) v.findViewById(R.id.conText);
@@ -147,7 +150,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 toDoList.remove(position);
-                toDoListAdapter.notifyDataSetChanged();
+                toDoRecyclerAdapter.notifyDataSetChanged();
+                database = todoOpenHelper.getWritableDatabase();
+                database.delete(TODO_TABLE_NAME, ToDoOpenHelper.TODO_ID + " = " + id, null);
             }
         });
         builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -164,21 +169,26 @@ public class MainActivity extends AppCompatActivity {
         todoOpenHelper = ToDoOpenHelper.getOpenHelperInstance(this);
         toDoList.clear();
         ArrayList<String> tasks = new ArrayList<>();
+        String desc = "";
         database = todoOpenHelper.getReadableDatabase();
         Cursor cursor = database.query(TODO_TABLE_NAME, null, null, null, null, null, null);
         while (cursor.moveToNext()) {
 
             String title = cursor.getString(cursor.getColumnIndex(ToDoOpenHelper.TODO_TITLE));
             int id = cursor.getInt(cursor.getColumnIndex(ToDoOpenHelper.TODO_ID));
+            long alarmTime= cursor.getLong(cursor.getColumnIndex(ToDoOpenHelper.TODO_ALARM_TIME));
             Cursor cursor2 = database.query(TASK_TABLE_NAME, null, ToDoOpenHelper.TODO_ID + " = " + id, null, null, null, null);
             while (cursor2.moveToNext()) {
                 String task = cursor2.getString(cursor.getColumnIndex(ToDoOpenHelper.TASK_TITLE));
                 tasks.add(task);
+                desc += task + ", ";
             }
-            ToDo t = new ToDo(id, title, tasks);
+            ToDo t = new ToDo(id, title, desc, alarmTime);
             toDoList.add(t);
         }
-        toDoListAdapter.notifyDataSetChanged();
+        toDoRecyclerAdapter.notifyDataSetChanged();
+        int size = toDoList.size();
+        mRecyclerView.smoothScrollToPosition(size);
     }
 
 }
@@ -229,3 +239,71 @@ AlertDialog.Builder builder = new AlertDialog.Builder(this);
         }
 
  */
+
+
+/*
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                pos = position;
+                Intent i = new Intent(MainActivity.this, ToDoDetailActivity.class);
+                i.putExtra(IntentConstants.TODO_ID, toDoList.get(position).id);
+                i.putExtra(IntentConstants.TODO_TITLE, toDoList.get(position).title);
+                startActivityForResult(i, 1);
+
+            }
+        });
+        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                database = todoOpenHelper.getWritableDatabase();
+                id = toDoList.get(position).id;
+                remove(position);
+                database.delete(TODO_TABLE_NAME, ToDoOpenHelper.TODO_ID + " = " + id, null);
+                return true;
+            }
+        });
+        */
+
+    /*
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (R.id.remove == id) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Delete?");
+            builder.setCancelable(false);
+
+            //builder.setMessage("Are you sure you wanna delete?");
+            View v = getLayoutInflater().inflate(R.layout.dialog_view, null);
+            final TextView tv = (TextView) v.findViewById(R.id.conText);
+            tv.setText("Are you sure you want to delete?");
+            builder.setView(v);
+            builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    toDoList.remove(toDoList.size() - 1);
+                    toDoRecyclerAdapter.notifyDataSetChanged();
+                }
+            });
+            builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            });
+            AlertDialog dialog = builder.create();
+            dialog.show();
+
+        }
+        return true;
+    }
+    */

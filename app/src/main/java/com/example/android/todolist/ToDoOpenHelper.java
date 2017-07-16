@@ -15,6 +15,10 @@ public class ToDoOpenHelper extends SQLiteOpenHelper {
     public static final String TASK_TABLE_NAME = "Tasks";
     public static final String TASK_TITLE = "task_title";
     public static final String TASK_ID = "task_id";
+    public static final String TASK_STATUS = "task_status";
+    //public static final String TODOS_TIME_CREATED = "AllTodosTimeCreated";
+    public static final String TODO_ALARM_TIME = "alarm_time";
+
     public static ToDoOpenHelper todoOpenHelper;
 
     public static ToDoOpenHelper getOpenHelperInstance(Context context) {
@@ -30,9 +34,9 @@ public class ToDoOpenHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        String query1 = "Create table " + TODO_TABLE_NAME + " ( " +
+        String query1 = "Create table " + TODO_TABLE_NAME + " (" +
                 TODO_ID + " integer primary key autoincrement, " +
-                TODO_TITLE + " text);";
+                TODO_TITLE + " text, " + TODO_ALARM_TIME + " long);";
 
         db.execSQL(query1);
 
@@ -40,7 +44,8 @@ public class ToDoOpenHelper extends SQLiteOpenHelper {
         String query2 = "Create table " + TASK_TABLE_NAME + " ( " +
                 TASK_ID + " integer primary key autoincrement, " +
                 TODO_ID + " integer, " +
-                TASK_TITLE + " text);";
+                TASK_TITLE + " text, " +
+                TASK_STATUS + " boolean);";
 
         db.execSQL(query2);
     }

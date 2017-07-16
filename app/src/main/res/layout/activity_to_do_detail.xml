@@ -8,28 +8,60 @@
     tools:context="com.example.android.todolist.ToDoDetailActivity">
 
     <EditText
+        android:id="@+id/title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textStyle="bold"
+        android:layout_margin="16dp"
         android:hint="Title"
-        android:id="@+id/title"/>
-    
-    <ListView
+        android:inputType="textCapSentences"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:id="@+id/alarm_date_time"
+        android:textSize="16sp"
+        android:visibility="gone"/>
+
+    <ListView
         android:id="@+id/taskListView"
-        android:layout_margin="8dp"/>
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:divider="@null"
+        android:dividerHeight="0dp" />
+
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:hint="Add more?"
         android:id="@+id/addTasks"
-        android:layout_margin="8dp"/>
-    <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="SUMBIT"
-        android:focusable="false"
-        android:id="@+id/submit"
-        android:layout_margin="8dp"/>
+        android:layout_margin="16dp"
+        android:focusable="true"
+        android:hint="Add more?"
+        android:textSize="16sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/alarm_btn"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="SET ALARM" />
+
+        <Button
+            android:id="@+id/submit"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:focusable="false"
+            android:text="SUMBIT" />
+    </LinearLayout>
+
 </LinearLayout>
