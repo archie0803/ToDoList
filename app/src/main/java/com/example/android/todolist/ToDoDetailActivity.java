@@ -75,7 +75,7 @@ public class ToDoDetailActivity extends AppCompatActivity {
 
         // EDIT OR NEW
         Intent i = getIntent();
-        id = i.getIntExtra(IntentConstants.TODO_ID, -1);
+git        id = i.getIntExtra(IntentConstants.TODO_ID, -1);
         Log.d("ID: ", id + " DA");
         if (id != -1) {
             //TITLE
