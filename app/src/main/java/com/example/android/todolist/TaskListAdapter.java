@@ -47,6 +47,7 @@ public class TaskListAdapter extends ArrayAdapter<String> {
             convertView = LayoutInflater.from(context).inflate(R.layout.task_list_view, null);
             CheckBox status = (CheckBox) convertView.findViewById(R.id.taskCheck);
             EditText taskDetail = (EditText) convertView.findViewById(R.id.taskText);
+            taskDetail.setText("");
             TaskViewHolder taskViewHolder = new TaskViewHolder(status, taskDetail);
             convertView.setTag(taskViewHolder);
         }

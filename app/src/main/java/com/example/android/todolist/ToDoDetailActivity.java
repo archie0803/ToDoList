@@ -42,7 +42,7 @@ public class ToDoDetailActivity extends AppCompatActivity {
     SQLiteDatabase database;
     TaskListAdapter taskAdapt;
     TextView addTasks;
-    EditText taskText;
+
     TextView alarmDateTime;
     Button setAlarm;
     Calendar calendar;
@@ -75,7 +75,7 @@ public class ToDoDetailActivity extends AppCompatActivity {
 
         // EDIT OR NEW
         Intent i = getIntent();
-git        id = i.getIntExtra(IntentConstants.TODO_ID, -1);
+        id = i.getIntExtra(IntentConstants.TODO_ID, -1);
         Log.d("ID: ", id + " DA");
         if (id != -1) {
             //TITLE
@@ -99,7 +99,7 @@ git        id = i.getIntExtra(IntentConstants.TODO_ID, -1);
             alarmDateTime.setText("Alarm Date: " + newAlarmDate + "\nAlarm Time: " + newAlarmTime);
 
             //ADD TASKS
-            taskText = (EditText) findViewById(R.id.taskText);
+            EditText taskText = (EditText) findViewById(R.id.taskText);
             database = todoOpenHelper.getReadableDatabase();
             String col[] = {TASK_ID, TASK_TITLE};
             Cursor cursor = database.query(TASK_TABLE_NAME, col, ToDoOpenHelper.TODO_ID + " = " + id, null, null, null, null);
@@ -115,14 +115,12 @@ git        id = i.getIntExtra(IntentConstants.TODO_ID, -1);
         }
         Log.d("VALUE", id + "");
 
-
         setAlarm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 int year = calendar.get(Calendar.YEAR);
                 int month = calendar.get(Calendar.MONTH);
                 int day = calendar.get(Calendar.DAY_OF_MONTH);
-
 
                 alarmDateTime.setText("Alarm Date: " + newDate + "\nAlarm Time: " + newTime);
                 showDatePicker(ToDoDetailActivity.this, year, month, day);
@@ -139,13 +137,22 @@ git        id = i.getIntExtra(IntentConstants.TODO_ID, -1);
 
                 //Add More clicked - added to ArrayList and display.
                 //Submit clicked - added to database
+
+
                 String addedTask;
-                if (taskList.size() > 1) {
-                    taskListView.setSelection(taskListView.getAdapter().getCount() - 1);
-                    taskText = (EditText) findViewById(R.id.taskText);
+                if (taskList.size() >= 1) {
+                    int lastPosition = taskListView.getAdapter().getCount() - 1;
+                    View v = taskListView.getChildAt(lastPosition);
+
+                    //taskListView.setSelection();
+                    EditText taskText = (EditText) v.findViewById(R.id.taskText);
                     addedTask = taskText.getText().toString();
-                    Task t = new Task(false, addedTask);
-                    taskList.add(t);
+                    Task t = taskList.get(lastPosition);
+                    t.task = addedTask;
+                    t.STATUS_COMPLETE = false;
+                    Task t1 = new Task();
+                    taskList.add(t1);
+                    taskListView.setSelection(taskList.size() - 1);
                 } else {
                     Task t = new Task();
                     taskList.add(t);

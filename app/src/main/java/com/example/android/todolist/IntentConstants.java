@@ -8,6 +8,6 @@ public class IntentConstants {
 
     public static final String TODO_TITLE = "todo_title";
     public static final String TODO_ID = "todo_id";
-    public static final String TODO_ALARM_TIME = "todo_id";
+    public static final String TODO_ALARM_TIME = "todo_alarm_time";
 }
 
