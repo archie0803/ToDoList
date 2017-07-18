@@ -55,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
 
         todoOpenHelper = ToDoOpenHelper.getOpenHelperInstance(this);
 
-        mRecyclerView = (RecyclerView)findViewById(R.id.recycler_view);
+        mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
 
         toDoList = new ArrayList<>();
 
@@ -77,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
                 i.putExtra(IntentConstants.TODO_ID, toDoList.get(position).id);
                 Log.d("ID: ", toDoList.get(position).id + " MA");
                 i.putExtra(IntentConstants.TODO_TITLE, toDoList.get(position).getTitle());
-                if(toDoList.get(position).getAlarmTime() != 0){
+                if (toDoList.get(position).getAlarmTime() != 0) {
                     Log.d("ID: ", toDoList.get(position).getAlarmTime() + " AT");
                     i.putExtra(IntentConstants.TODO_ALARM_TIME, toDoList.get(position).getAlarmTime());
                 }
@@ -126,9 +126,7 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == 1) {
             if (resultCode == RESULT_OK) {
                 updateTasks();
-            }
-
-            else if (requestCode == RESULT_CANCELED) {
+            } else if (resultCode == RESULT_CANCELED) {
                 //
             }
         }
@@ -143,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
         final int id = i_d;
         //builder.setMessage("Are you sure you wanna delete?");
         View v = getLayoutInflater().inflate(R.layout.dialog_view, null);
-        final TextView tv = (TextView) v.findViewById(R.id.conText);
+        final TextView tv = v.findViewById(R.id.conText);
         tv.setText("Are you sure you want to delete?");
         builder.setView(v);
         builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
@@ -153,6 +151,7 @@ public class MainActivity extends AppCompatActivity {
                 toDoRecyclerAdapter.notifyDataSetChanged();
                 database = todoOpenHelper.getWritableDatabase();
                 database.delete(TODO_TABLE_NAME, ToDoOpenHelper.TODO_ID + " = " + id, null);
+                //Cursor c = database.query()
             }
         });
         builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -173,22 +172,23 @@ public class MainActivity extends AppCompatActivity {
         database = todoOpenHelper.getReadableDatabase();
         Cursor cursor = database.query(TODO_TABLE_NAME, null, null, null, null, null, null);
         while (cursor.moveToNext()) {
-
             String title = cursor.getString(cursor.getColumnIndex(ToDoOpenHelper.TODO_TITLE));
             int id = cursor.getInt(cursor.getColumnIndex(ToDoOpenHelper.TODO_ID));
-            long alarmTime= cursor.getLong(cursor.getColumnIndex(ToDoOpenHelper.TODO_ALARM_TIME));
+            long alarmTime = cursor.getLong(cursor.getColumnIndex(ToDoOpenHelper.TODO_ALARM_TIME));
             Cursor cursor2 = database.query(TASK_TABLE_NAME, null, ToDoOpenHelper.TODO_ID + " = " + id, null, null, null, null);
             while (cursor2.moveToNext()) {
-                String task = cursor2.getString(cursor.getColumnIndex(ToDoOpenHelper.TASK_TITLE));
+                String task = cursor2.getString(cursor2.getColumnIndex(ToDoOpenHelper.TASK_TITLE));
                 tasks.add(task);
                 desc += task + ", ";
             }
             ToDo t = new ToDo(id, title, desc, alarmTime);
             toDoList.add(t);
+            cursor2.close();
         }
         toDoRecyclerAdapter.notifyDataSetChanged();
         int size = toDoList.size();
         mRecyclerView.smoothScrollToPosition(size);
+        cursor.close();
     }
 
 }

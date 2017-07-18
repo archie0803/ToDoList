@@ -16,7 +16,7 @@ public class ToDoOpenHelper extends SQLiteOpenHelper {
     public static final String TASK_TITLE = "task_title";
     public static final String TASK_ID = "task_id";
     public static final String TASK_STATUS = "task_status";
-    //public static final String TODOS_TIME_CREATED = "AllTodosTimeCreated";
+    public static final String TODO_DESCRIPTION = "todo_desc";
     public static final String TODO_ALARM_TIME = "alarm_time";
 
     public static ToDoOpenHelper todoOpenHelper;
@@ -45,7 +45,7 @@ public class ToDoOpenHelper extends SQLiteOpenHelper {
                 TASK_ID + " integer primary key autoincrement, " +
                 TODO_ID + " integer, " +
                 TASK_TITLE + " text, " +
-                TASK_STATUS + " boolean);";
+                TASK_STATUS + " integer default 0);";
 
         db.execSQL(query2);
     }

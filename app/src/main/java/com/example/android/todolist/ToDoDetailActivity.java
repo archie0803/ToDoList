@@ -12,6 +12,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Adapter;
 import android.widget.ArrayAdapter;
@@ -26,7 +27,10 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 
+import static android.icu.lang.UCharacter.GraphemeClusterBreak.L;
+import static com.example.android.todolist.R.id.taskText;
 import static com.example.android.todolist.ToDoOpenHelper.TASK_ID;
+import static com.example.android.todolist.ToDoOpenHelper.TASK_STATUS;
 import static com.example.android.todolist.ToDoOpenHelper.TASK_TABLE_NAME;
 import static com.example.android.todolist.ToDoOpenHelper.TASK_TITLE;
 import static com.example.android.todolist.ToDoOpenHelper.TODO_TABLE_NAME;
@@ -99,19 +103,7 @@ public class ToDoDetailActivity extends AppCompatActivity {
             alarmDateTime.setText("Alarm Date: " + newAlarmDate + "\nAlarm Time: " + newAlarmTime);
 
             //ADD TASKS
-            EditText taskText = (EditText) findViewById(R.id.taskText);
-            database = todoOpenHelper.getReadableDatabase();
-            String col[] = {TASK_ID, TASK_TITLE};
-            Cursor cursor = database.query(TASK_TABLE_NAME, col, ToDoOpenHelper.TODO_ID + " = " + id, null, null, null, null);
-            while (cursor.moveToNext()) {
-                //Display the arrayList content
-                Task t = new Task();
-                t.task = cursor.getString(cursor.getColumnIndex(ToDoOpenHelper.TASK_TITLE));
-                taskList.add(t);
-                taskText.setText(t.task);
-                taskAdapt.notifyDataSetChanged();
-
-            }
+            loadTasks();
         }
         Log.d("VALUE", id + "");
 
@@ -140,37 +132,29 @@ public class ToDoDetailActivity extends AppCompatActivity {
 
 
                 String addedTask;
+                //String desc = "";
                 if (taskList.size() >= 1) {
                     int lastPosition = taskListView.getAdapter().getCount() - 1;
                     View v = taskListView.getChildAt(lastPosition);
-
-                    //taskListView.setSelection();
-                    EditText taskText = (EditText) v.findViewById(R.id.taskText);
+                    EditText taskText = v.findViewById(R.id.taskText);
                     addedTask = taskText.getText().toString();
                     Task t = taskList.get(lastPosition);
                     t.task = addedTask;
-                    t.STATUS_COMPLETE = false;
+                    t.status = 0;
                     Task t1 = new Task();
                     taskList.add(t1);
                     taskListView.setSelection(taskList.size() - 1);
+                    //desc += addedTask + " ,";
                 } else {
                     Task t = new Task();
                     taskList.add(t);
                 }
-
-
                 taskAdapt.notifyDataSetChanged();
-//
-//                ContentValues cv = new ContentValues();
-//                cv.put(ToDoOpenHelper.TODO_TITLE, newTask);
-//
-//                database.update(TASK_TABLE_NAME, cv, ToDoOpenHelper.TODO_ID + " = " + id, null);
-//                SQLiteDatabase database = todoOpenHelper.getWritableDatabase();
-//                database.insert(TASK_TABLE_NAME, null, null);
+
             }
         });
 
-        //DONE EXCEPT THE TASKS PORTION. ADD DESCRIPTION IF YOU WANT
+        //DONE EXCEPT THE TASKS PORTION.
         Submit = (Button) findViewById(R.id.submit);
         Submit.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -191,8 +175,21 @@ public class ToDoDetailActivity extends AppCompatActivity {
 
                 if (id == -1) {
                     database.insert(TODO_TABLE_NAME, null, cv);
+                    for (int i = 0; i < taskList.size(); i++) {
+                        ContentValues cv2 = new ContentValues();
+                        cv2.put(todoOpenHelper.TASK_TITLE, taskList.get(i).task);
+                        cv2.put(ToDoOpenHelper.TASK_STATUS, taskList.get(i).status);
+                        database.insert(TASK_TABLE_NAME, null, cv2);
+                    }
                 } else if (id > 0) {
                     database.update(TODO_TABLE_NAME, cv, ToDoOpenHelper.TODO_ID + " = " + id, null);
+                    for (int i = 0; i < taskList.size(); i++) {
+                        ContentValues cv2 = new ContentValues();
+                        cv2.put(todoOpenHelper.TASK_TITLE, taskList.get(i).task);
+                        cv2.put(ToDoOpenHelper.TASK_STATUS, taskList.get(i).status);
+                        database.replace(TASK_TABLE_NAME, null, cv2);
+                    }
+
                 }
 
                 AlarmManager am = (AlarmManager) ToDoDetailActivity.this.getSystemService(Context.ALARM_SERVICE);
@@ -201,11 +198,31 @@ public class ToDoDetailActivity extends AppCompatActivity {
                 PendingIntent pendingIntent = PendingIntent.getBroadcast(ToDoDetailActivity.this, 1, intent, 0);
                 am.set(AlarmManager.RTC, epoch, pendingIntent);
 
+
                 setResult(RESULT_OK);
                 finish();
             }
         });
     }
+
+    private void loadTasks() {
+        todoOpenHelper = ToDoOpenHelper.getOpenHelperInstance(this);
+        taskList.clear();
+        database = todoOpenHelper.getReadableDatabase();
+        String col[] = {TASK_ID, TASK_TITLE, TASK_STATUS};
+        Cursor cursor = database.query(TASK_TABLE_NAME, col, ToDoOpenHelper.TODO_ID + " = " + id, null, null, null, null);
+        //Cursor cursor = database.query(TASK_TABLE_NAME, null, null, null, null, null, null);
+        while (cursor.moveToNext()) {
+            String title = cursor.getString(cursor.getColumnIndex(ToDoOpenHelper.TASK_TITLE));
+            int status = cursor.getInt(cursor.getColumnIndex(ToDoOpenHelper.TASK_STATUS));
+            Task t = new Task(status, title);
+            Log.d("TASK ", "STATUS: " + status);
+            Log.d("TASK ", "TITLE: " + title);
+            taskList.add(t);
+        }
+        taskAdapt.notifyDataSetChanged();
+    }
+
 
     private void showTimePicker(Context context, int hour, int minute) {
         TimePickerDialog mTimePicker = new TimePickerDialog(context, new TimePickerDialog.OnTimeSetListener() {
@@ -248,7 +265,6 @@ public class ToDoDetailActivity extends AppCompatActivity {
         //String selectedTime = showTimePicker(ToDoDetailActivity.this, hour, minute);
         finalAlarm = "Alarm Date: " + newDate + "\nAlarm Time: " + newTime;
         alarmDateTime.setText("Alarm Date: " + newDate + "\nAlarm Time: " + newTime);
-
     }
 
 

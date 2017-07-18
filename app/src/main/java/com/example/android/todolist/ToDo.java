@@ -10,7 +10,7 @@ public class ToDo {
 
     int id;
     private String title;
-    private String tasks;
+    private String desc;
     private long alarmTime;
 
     public String getTitle() {
@@ -22,17 +22,17 @@ public class ToDo {
     }
 
     public String getTasks() {
-        return tasks;
+        return desc;
     }
 
     public void setTasks(String tasks) {
-        this.tasks = tasks;
+        this.desc = tasks;
     }
 
     public ToDo(int id, String title, String tasks, long alarmTime) {
         this.id = id;
         this.title = title;
-        this.tasks = tasks;
+        this.desc = tasks;
         this.alarmTime = alarmTime;
     }
 

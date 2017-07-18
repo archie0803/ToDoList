@@ -20,6 +20,7 @@ import java.util.ArrayList;
 public class TaskListAdapter extends ArrayAdapter<String> {
 
     ArrayList<Task> taskArrayList;
+    boolean STATUS_COMPLETE;
     Context context;
 
     public TaskListAdapter(@NonNull Context context, ArrayList<Task> taskArrayList) {
@@ -51,15 +52,28 @@ public class TaskListAdapter extends ArrayAdapter<String> {
             TaskViewHolder taskViewHolder = new TaskViewHolder(status, taskDetail);
             convertView.setTag(taskViewHolder);
         }
+        STATUS_COMPLETE = false;
         final TaskViewHolder taskViewHolder = (TaskViewHolder) convertView.getTag();
         final Task t = taskArrayList.get(position);
-        taskViewHolder.status.setChecked(t.STATUS_COMPLETE);
+        if (t.status == 0) {
+            STATUS_COMPLETE = false;
+        } else if (t.status == 1) {
+            STATUS_COMPLETE = true;
+        }
+        taskViewHolder.status.setChecked(STATUS_COMPLETE);
         taskViewHolder.taskDetail.setText(t.task);
         taskViewHolder.status.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                taskViewHolder.status.setChecked(true);
-                t.STATUS_COMPLETE = true;
+                if (STATUS_COMPLETE) {
+                    taskViewHolder.status.setChecked(false);
+                    STATUS_COMPLETE = false;
+                    t.status = 0;
+                } else if (!STATUS_COMPLETE) {
+                    taskViewHolder.status.setChecked(true);
+                    STATUS_COMPLETE = true;
+                    t.status = 1;
+                }
             }
         });
         return convertView;

@@ -1,20 +1,22 @@
 package com.example.android.todolist;
 
+import static android.provider.Telephony.TextBasedSmsColumns.STATUS_COMPLETE;
+
 /**
  * Created by Archita on 06-07-2017.
  */
 
 public class Task {
-    public boolean STATUS_COMPLETE;
+    public int status;
     public String task;
 
     public Task() {
-        STATUS_COMPLETE = false;
+        status = 0;
     }
 
-    public Task(boolean STATUS_COMPLETE, String task) {
+    public Task(int status, String task) {
         super();
-        this.STATUS_COMPLETE = STATUS_COMPLETE;
+        this.status = status;
         this.task = task;
     }
 }
